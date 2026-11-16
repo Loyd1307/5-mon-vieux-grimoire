@@ -3,22 +3,30 @@ const express = require("express");
 const app = express();
 
 app.use((req, res, next) => {
-    console.log("Requête reçue !");
-    next();
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  next();
 });
 
-app.use((req, res, next) => {
-    res.status(201);
-    next();
-});
+app.use("/api/books", (req, res, next) => {
+    const books = [
+        {
+            userId: String,
+            title: String,
+            author: String,
+            imageUrl: String,
+            year: Number,
+            genre: String,
+            rating: [
+                {userId: String,
+                grade: Number}
+            ],
+            averageRating: Number
+        }
+    ];
 
-app.use((req, res, next) => {
-    res.json({message: "Votre requête a bien été reçue !"});
-    next();
-});
-
-app.use((req, res) => {
-    console.log("Réponse envoyée avec succès !");
+    res.status(200).json(books);
 });
 
 module.exports = app;
