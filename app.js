@@ -3,6 +3,8 @@ const express = require("express");
 require('dotenv').config();
 const mongoose = require('mongoose');
 
+const Book = require('./models/Books');
+
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(error => console.error(
@@ -22,30 +24,29 @@ app.use((req, res, next) => {
 });
 
 app.post("/api/books", (req, res, next) => {
-    console.log(req.body);
-    res.status(201).json({
-        message: "Livre ajouté!"
+    delete req.body._id;
+    const book = new Book({
+        ...req.body
     });
+    book.save()
+        .then(() => {
+            res.status(201).json({
+                message: "Livre ajouté !"
+            });
+        })
+        .catch(error => {
+            res.status(400).json({ error });
+        });
 });
 
 app.get("/api/books", (req, res, next) => {
-    const books = [
-        {
-            userId: String,
-            title: String,
-            author: String,
-            imageUrl: String,
-            year: Number,
-            genre: String,
-            rating: [
-                {userId: String,
-                grade: Number}
-            ],
-            averageRating: Number
-        }
-    ];
-
-    res.status(200).json(books);
+    Book.find()
+        .then(books => {
+            res.status(200).json(books);
+        })
+        .catch(error => {
+            res.status(400).json({ error });
+        });
 });
 
 module.exports = app;
