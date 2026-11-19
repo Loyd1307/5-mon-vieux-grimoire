@@ -4,6 +4,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 
 const bookRoutes = require('./routes/Book');
+const userRoutes = require("./routes/User");
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connexion à MongoDB réussie !'))
@@ -24,5 +25,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/books', bookRoutes);
+app.use("/api/auth", userRoutes)
 
 module.exports = app;
