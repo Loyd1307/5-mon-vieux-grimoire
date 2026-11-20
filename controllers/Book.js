@@ -132,10 +132,10 @@ exports.rateBook = async (req, res, next) => {
 
 /* test best rating */
 
-exports.bestRateBook = async (req, res, next) => {
+exports.getBestRatedBooks = async (req, res, next) => {
     try {
         const bestRatedBooks = await Book.find({
-            "rating.0": { $exists: true }
+            "ratings.0": { $exists: true }
         })
             .sort({ averageRating: -1 })
             .limit(3);
