@@ -71,3 +71,60 @@ exports.allBooks = (req, res, next) => {
             res.status(400).json({ error });
         });
 };
+
+/* test controller rating */
+
+exports.rateBook = async (req, res, next) => {
+    try {
+        const userId = req.auth.userId;
+        const { rating } = req.body;
+
+        // Vérifier la validité de la note
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            return res.status(400).json({
+                message: "La note doit être comprise entre 1 et 5"
+            });
+        }
+
+        // Récupérer le livre
+        const book = await Book.findById(req.params.id);
+
+        if (!book) {
+            return res.status(404).json({
+                message: "Livre introuvable"
+            });
+        }
+
+        // Vérifier si l'utilisateur a déjà noté ce livre
+        const alreadyRated = book.ratings.some(
+            (r) => r.userId.toString() === userId
+        );
+
+        if (alreadyRated) {
+            return res.status(400).json({
+                message: "Vous avez déjà noté ce livre"
+            });
+        }
+
+        // Ajouter la note
+        book.ratings.push({
+            userId,
+            grade: rating
+        });
+
+        // Calculer la moyenne
+        const total = book.ratings.reduce(
+            (sum, r) => sum + r.grade,
+            0
+        );
+
+        book.averageRating = total / book.ratings.length;
+
+        await book.save();
+
+        return res.status(200).json(book);
+
+    } catch (error) {
+        next(error);
+    }
+};
