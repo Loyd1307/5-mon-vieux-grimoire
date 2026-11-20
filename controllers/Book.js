@@ -1,4 +1,5 @@
 const Book = require("../models/Books");
+const fs = require("fs");
 
 exports.createBook = (req, res, next) => {
     const bookObject = JSON.parse(req.body.book);
@@ -123,6 +124,23 @@ exports.rateBook = async (req, res, next) => {
         await book.save();
 
         return res.status(200).json(book);
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+/* test best rating */
+
+exports.bestRateBook = async (req, res, next) => {
+    try {
+        const bestRatedBooks = await Book.find({
+            "rating.0": { $exists: true }
+        })
+            .sort({ averageRating: -1 })
+            .limit(3);
+
+        return res.status(200).json(bestRatedBooks);
 
     } catch (error) {
         next(error);
