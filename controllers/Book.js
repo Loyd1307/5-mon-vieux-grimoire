@@ -1,19 +1,48 @@
 const Book = require("../models/Books");
 const fs = require("fs");
+const sharp = require('sharp');
+const path = require('path');
 
-exports.createBook = (req, res, next) => {
+exports.createBook = async (req, res, next) => {
+  let imagePath;
+
+  try {
     const bookObject = JSON.parse(req.body.book);
+
     delete bookObject._id;
     delete bookObject._userId;
+
+    const name = req.file.originalname.split(" ").join("_");
+    const filename = name + Date.now() + ".webp";
+
+    imagePath = path.join(__dirname, "..", "images", filename);
+
+    // Compression et conversion avec Sharp
+    await sharp(req.file.buffer)
+      .resize({
+        width: 800,
+        withoutEnlargement: true
+      })
+      .webp({ quality: 80 })
+      .toFile(imagePath);
+
     const book = new Book({
-        ...bookObject,
-        userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+      ...bookObject,
+      userId: req.auth.userId,
+      imageUrl: `${req.protocol}://${req.get("host")}/images/${filename}`
     });
 
-    book.save()
-    .then(() => { res.status(201).json({message: 'Livre enregistré !'})})
-    .catch(error => { res.status(400).json( { error })})
+    await book.save();
+
+    res.status(201).json({ message: "Livre enregistré !" });
+
+  } catch (error) {
+    if (imagePath) {
+      await fs.promises.unlink(imagePath).catch(() => {});
+    }
+
+    next(error);
+  }
 };
 
 exports.modifyBook = (req, res, next) => {
