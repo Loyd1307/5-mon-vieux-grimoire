@@ -18,13 +18,15 @@ exports.createBook = async (req, res, next) => {
     imagePath = path.join(__dirname, "..", "images", filename);
 
     // Compression et conversion avec Sharp
-    await sharp(req.file.buffer)
+    await sharp(req.file.path)
       .resize({
-        width: 800,
+        width: 1200,
         withoutEnlargement: true
       })
-      .webp({ quality: 80 })
+      .webp({ quality: 90 })
       .toFile(imagePath);
+
+    await fs.promises.unlink(req.file.path);
 
     const book = new Book({
       ...bookObject,
